@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player with Playlist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            width: 100%;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .music-player {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .song-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .screen {
+            width: 250px;
+            height: 250px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        button {
+            background: #ff3f3f;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 10px 15px;
+            margin: 0 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #ff1744;
+        }
+
+        .seek-bar-container {
+            width: 100%;
+            height: 5px;
+            background-color: #ddd;
+            margin-top: 20px;
+            position: relative;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #seek-bar-fill {
+            width: 0%;
+            height: 100%;
+            background-color: black;
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: width 0.1s linear;
+        }
+
+        #seek-bar {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            outline: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 0;
+            height: 5px;
+        }
+
+        #seek-bar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #ff3f3f;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+#seek-bar::-moz-range-thumb { 
+    width: 15px; 
+    height: 15px; 
+    background: #ff3f3f; 
+    cursor: pointer; 
+    border-radius: 50%; 
+    position: relative; 
+}
+
+#seek-bar::-moz-range-thumb::after { 
+    content: ""; 
+    width: 8px; 
+    height: 8px; 
+    background: #ff3f3f; 
+    border-radius: 50%; 
+    position: absolute; 
+    top: -5px; 
+    left: 20px; 
+}
+
+        #download-btn {
+            background: #000000;
+            color: white;
+            border: solid #ee0000;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        #download-btn:hover {
+            background-color: #45a049;
+        }
+
+        .music-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #f8f8f8;
+        }
+
+        .music-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .music-item:hover {
+            transform: scale(1.02);
+            background-color: #e0e0e0;
+        }
+
+        .thumbnail {
+            width: 50px;
+            height: 50px;
+            background-color: #000;
+            flex-shrink: 0;
+            overflow: hidden;
+            margin-right: 15px;
+            border-radius: 5px;
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .music-info {
+            flex-grow: 1;
+        }
+
+        .music-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .section-title {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #333;
+            text-transform: uppercase;
+            border-bottom: 2px solid #ff1744;
+            padding-bottom: 10px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #000000;
+            border-top: 5px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .music-player {
+                padding: 20px;
+            }
+
+            .screen {
+                width: 200px;
+                height: 200px;
+            }
+
+            .song-name {
+                font-size: 24px;
+            }
+
+            .music-list {
+                max-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="music-player">
+            <div class="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+            <div class="song-name" id="song-name">Song Title</div>
+            <div class="screen">
+                <img id="song-cover" src="/placeholder.svg" alt="Music Cover">
+            </div>
+            <audio id="audio-player">
+                <source src="/placeholder.svg" type="audio/mp3">
+                Your browser does not support the audio element.
+            </audio>
+            <div class="seek-bar-container">
+                <div id="seek-bar-fill"></div>
+                <input type="range" id="seek-bar" value="0" step="0.1">
+            </div>
+            <div class="controls">
+                <button id="prev">&#9665;&#9665;</button>
+                <button id="play-stop">&#9654;</button>
+                <button id="next">&#9655;&#9655;</button>
+            </div>
+            <button id="download-btn">Download MP3</button>
+        </div>
+        <div class="music-list">
+            <h2 class="section-title">Playlist</h2>
+            <!-- Songs will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        const audio = document.getElementById("audio-player");
+        const playStopBtn = document.getElementById("play-stop");
+        const seekBar = document.getElementById("seek-bar");
+        const seekBarFill = document.getElementById("seek-bar-fill");
+        const songName = document.getElementById("song-name");
+        const songCover = document.getElementById("song-cover");
+        const downloadBtn = document.getElementById("download-btn");
+        const prevBtn = document.getElementById("prev");
+        const nextBtn = document.getElementById("next");
+        const musicList = document.querySelector('.music-list');
+        const loadingOverlay = document.querySelector('.loading-overlay');
+
+        const songs = [
+            {
+                name: "tu hai kaha",
+                audioUrl: "https://mr-jat.in/dlod/6085/320",
+                imageUrl: "https://mr-jat.in/siteuploads/generaltheme/thumb/files/sft13/6085/6085-2.webp"
+            },
+            {
+                name: "Sagar-Diya-Challa",
+                audioUrl: "https://www.pagalworld.my/download/5cb302/Sagar-Diya-Challa?st=a4d629e37a535d91b7b5a94764b&e=1738442477",
+                imageUrl: "https://www.pagalworld.my/thumb/Sagar+Diya+Challa/220x220"
+            },
+            {
+                name: "yara teri meri yari",
+                audioUrl: "https://pagalfree.com/download/320-Yaari%20Hai%20-%20Tony%20Kakkar%20320%20Kbps.mp3",
+                imageUrl: "https://pagalnew.com/coverimages/Yaari-Hai-Tony-Kakkar-500-500.jpg"
+            },
+            {
+                name: "9:45",
+                audioUrl: "https://pagalworld.cool/files/download/type/128/id/474",
+                imageUrl: "https://pagalworld.cool/siteuploads/thumb/sft1/474_resize2x_150x150.webp"
+            },
+            {
+                name: "jannat ve",
+                audioUrl: "https://pagalfree.com/download/320-Jannat%20Ve%20-%20Darshan%20Raval%20320%20Kbps.mp3",
+                imageUrl: "https://pagalfree.com/images/128Jannat%20Ve%20-%20Darshan%20Raval%20128%20Kbps.jpg"
+            },
+            {
+                name: "lagi lagan tere sang",
+                audioUrl: "https://pagalfree.com/download/320-Laagi%20Lagan%20Shankara%20-%20Hansraj%20Raghuwanshi%20320%20Kbps.mp3",
+                imageUrl: "https://pagalfree.com/images/128Laagi%20Lagan%20Shankara%20-%20Hansraj%20Raghuwanshi%20128%20Kbps.jpg"
+            },
+            {
+                name: "daku",
+                audioUrl: "https://cdnsongs.com/dren/music/data/Single_Track/202101/Daku/320/Daku_1.mp3/Daku.mp3",
+                imageUrl: "https://cover.mr-jatt.im/thumb/492001/Daku-1.jpg"
+            },
+            {
+                name: "the villager",
+                audioUrl: "https://hd1.djjohal.com/320/510058/The%20Villagers%20-%20Sumit%20Goswami%20(DJJOhAL.Com).mp3",
+                imageUrl: "https://lq.djjohal.com/covers/725232/The%20Villagers.jpg"
+            },
+            {
+                name: "haryane ka jaat",
+                audioUrl: "https://www.oyedjsurendra.com/files/download/id/6248",
+                imageUrl: "https://pagalworld.com.pk/storage/thumbimages/album/haryane-ka-jaat-202408.jpg"
+            },
+            {
+                name: "victory anthom",
+                audioUrl: "https://pagalnew.com.se/files/download/id/8020",
+                imageUrl: "https://pagalhits.com/upload_file/17/230x230/thumb_672ae78c6f4f7.webp"
+            },
+            {
+                name: "desh mere",
+                audioUrl: "https://pagalfree.com/download/320-Desh%20Mere%20-%20Bhuj%20The%20Pride%20Of%20India%20320%20Kbps.mp3",
+                imageUrl: "https://pagalfree.com/images/128Desh%20Mere%20-%20Bhuj%20The%20Pride%20Of%20India%20128%20Kbps.jpg"
+            },
+            {
+                name: "cool hours",
+                audioUrl: "https://raag.fm/files/mp3/320/Hindi-Singles/23636/Cold%20Hours%20-%20(Raag.Fm).mp3",
+                imageUrl: "https://raag.fm/image/250/23636/Cold_Hours_Aleemrk.jpg"
+            },
+                        {
+                name: "shubharambh",
+                audioUrl: "https://pagalfree.com/download/320-Shubhaarambh%20-%20Kai%20Po%20Che%20320%20Kbps.mp3",
+                imageUrl: "https://pagalfree.com/images/128Shubhaarambh%20-%20Kai%20Po%20Che%20128%20Kbps.jpg"
+            },
+    { name: "teri baton main", audioUrl: "https://pagalfree.com/download/320-Teri%20Baaton%20Mein%20Aisa%20Uljha%20Jiya%20Title%20Song%20-%20Teri%20Baaton%20Mein%20Aisa%20Uljha%20Jiya%20320%20Kbps.mp3", imageUrl: "https://pagalfree.com/images/128Teri%20Baaton%20Mein%20Aisa%20Uljha%20Jiya%20Title%20Song%20-%20Teri%20Baaton%20Mein%20Aisa%20Uljha%20Jiya%20128%20Kbps.jpg" },
+    { name: "trolly", audioUrl: "https://www.shazam.com/song/1738055616/trollywood-1", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" },
+    { name: "", audioUrl: "", imageUrl: "" }
+        ];
+
+        let currentSongIndex = 0;
+        let isPlaying = false;
+
+        function showLoading() {
+            loadingOverlay.classList.add('show');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.remove('show');
+        }
+
+        function updatePlayer() {
+            const currentSong = songs[currentSongIndex];
+            showLoading();
+            audio.src = currentSong.audioUrl;
+            songName.textContent = currentSong.name;
+            songCover.src = currentSong.imageUrl;
+            if (isPlaying) {
+                audio.play().then(() => {
+                    hideLoading();
+                }).catch(error => {
+                    console.error('Error playing audio:', error);
+                    hideLoading();
+                });
+                playStopBtn.innerHTML = "&#9632;";
+            } else {
+                audio.pause();
+                hideLoading();
+                playStopBtn.innerHTML = "&#9654;";
+            }
+        }
+
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            updatePlayer();
+        }
+
+        function playNext() {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            isPlaying = true;
+            updatePlayer();
+        }
+
+        function playPrev() {
+            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            isPlaying = true;
+            updatePlayer();
+        }
+
+        playStopBtn.addEventListener("click", togglePlayPause);
+        nextBtn.addEventListener("click", playNext);
+        prevBtn.addEventListener("click", playPrev);
+
+        audio.addEventListener("timeupdate", () => {
+            if (!isNaN(audio.duration)) {
+                let progress = (audio.currentTime / audio.duration) * 100;
+                seekBar.value = progress;
+                seekBarFill.style.width = `${progress}%`;
+            }
+        });
+
+        seekBar.addEventListener("input", () => {
+            const seekTime = (seekBar.value / 100) * audio.duration;
+            audio.currentTime = seekTime;
+            seekBarFill.style.width = `${seekBar.value}%`;
+        });
+
+        audio.addEventListener("ended", playNext);
+
+        downloadBtn.addEventListener("click", () => {
+            const currentSong = songs[currentSongIndex];
+            const link = document.createElement('a');
+            link.href = currentSong.audioUrl;
+            link.download = `${currentSong.name}.mp3`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        songs.forEach((song, index) => {
+            const musicItem = document.createElement('div');
+            musicItem.className = 'music-item';
+            musicItem.innerHTML = `
+                <div class="thumbnail">
+                    <img src="${song.imageUrl}" alt="${song.name}">
+                </div>
+                <div class="music-info">
+                    <h2 class="music-name">${song.name}</h2>
+                </div>
+            `;
+            musicItem.addEventListener('click', () => {
+                currentSongIndex = index;
+                isPlaying = true;
+                updatePlayer();
+            });
+            musicList.appendChild(musicItem);
+        });
+
+        audio.addEventListener('loadstart', showLoading);
+        audio.addEventListener('canplay', hideLoading);
+
+        updatePlayer();
+    </script>
+</body>
+</html>
